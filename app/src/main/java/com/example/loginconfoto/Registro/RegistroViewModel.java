@@ -32,7 +32,6 @@ import java.io.ObjectOutputStream;
 public class RegistroViewModel  extends AndroidViewModel {
     private MutableLiveData<Usuario> mUsuario;
     private MutableLiveData<Bitmap> mFoto;
-    private byte[] bytesFoto;
 
     public RegistroViewModel(@NonNull Application application) {
         super(application);
@@ -68,9 +67,14 @@ public class RegistroViewModel  extends AndroidViewModel {
                 String mail = usu.getEmail();
                 String pass = usu.getPassword();
                 long dni = usu.getDni();
-                Bitmap foto = BitmapFactory.decodeByteArray(usu.getFoto(),0, usu.getFoto().length);
-                getMUsuario().setValue(usu);
-                fis.close();
+                if(usu.getFoto()!=null){
+                    Bitmap foto = BitmapFactory.decodeByteArray(usu.getFoto(),0, usu.getFoto().length);
+                    getMFoto().setValue(foto);
+                    getMUsuario().setValue(usu);
+                    fis.close();
+                    usu=null;
+                }
+
             } catch (EOFException eof) {
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
@@ -82,13 +86,14 @@ public class RegistroViewModel  extends AndroidViewModel {
         }
     }
 
-    public void guardarUsuario(String dni, String nombre, String apellido, String email, String password) {
-        Usuario usu = new Usuario(Long.parseLong(dni),nombre, apellido, email, password, bytesFoto);
+    public void guardarUsuario(String dni, String nombre, String apellido, String email, String password, Bitmap foto) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        foto.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        Usuario usu = new Usuario(Long.parseLong(dni),nombre, apellido, email, password, byteArray);
         File archivo = new File(getApplication().getFilesDir(), "usuario.dat");
+
             try {
-                if(archivo.length()!=0){
-                    archivo.delete();
-                }
                 FileOutputStream fos = new FileOutputStream(archivo, false);
                 BufferedOutputStream bos = new BufferedOutputStream(fos);
                 ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -106,20 +111,11 @@ public class RegistroViewModel  extends AndroidViewModel {
 
     public void tomarFoto(int requestCode, int resultCode, @Nullable Intent data, int REQUEST_IMAGE_CAPTURE ){
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            //Recupero los datos provenientes de la camara.
             Bundle extras = data.getExtras();
-            //Casteo a bitmap lo obtenido de la camara.
             Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-            //Rutina para optimizar la foto,
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
             mFoto.setValue(imageBitmap);
-
-
-            //Rutina para convertir a un arreglo de byte los datos de la imagen
-           bytesFoto = baos.toByteArray();
-
         }
     }
 }

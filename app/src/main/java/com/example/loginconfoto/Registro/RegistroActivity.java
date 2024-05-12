@@ -47,7 +47,7 @@ public class RegistroActivity extends AppCompatActivity {
                 String password = binding.etPasswordR.getText().toString();
                 BitmapDrawable drawable = (BitmapDrawable) binding.ivFoto.getDrawable();
                 Bitmap foto = drawable.getBitmap();
-                vmRegistro.guardarUsuario(dni, nombre, apellido, email, password);
+                vmRegistro.guardarUsuario(dni, nombre, apellido, email, password, foto);
             }
         });
         binding.btnTomarFoto.setOnClickListener(new View.OnClickListener() {
